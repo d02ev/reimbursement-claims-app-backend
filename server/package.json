@@ -1,0 +1,58 @@
+{
+  "name": "reimbursement-claims-app-server",
+  "version": "1.0.0",
+  "description": "A simple and minimal reimbursement claiming app",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "dotenv -e .env.development -- node src/index.js",
+    "start:dev": "dotenv -e .env.local -- nodemon src/index.js",
+    "migrate:local": "dotenv -e .env.local -- npx prisma migrate dev",
+    "migrate:development": "dotenv -e .env.development -- npx prisma migrate deploy",
+    "studio": "dotenv -e .env.local -- npx prisma studio",
+    "lint": "npx eslint src --fix",
+    "format": "npx prettier src --write"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/d02ev/reimbursement-claims-app.git"
+  },
+  "keywords": [
+    "javascript",
+    "postgres",
+    "sql",
+    "passport",
+    "file-upload",
+    "jwt",
+    "express",
+    "node"
+  ],
+  "author": "Vikramaditya Pratap Singh (d02ev)",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/d02ev/reimbursement-claims-app/issues"
+  },
+  "homepage": "https://github.com/d02ev/reimbursement-claims-app#readme",
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.529.1",
+    "@aws-sdk/s3-request-presigner": "^3.529.1",
+    "@prisma/client": "^5.10.2",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "dotenv-cli": "^7.3.0",
+    "express": "^4.18.3",
+    "http-errors": "^2.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^1.4.5-lts.1",
+    "passport": "^0.7.0",
+    "passport-jwt": "^4.0.1",
+    "winston": "^3.12.0"
+  },
+  "devDependencies": {
+    "eslint": "^8.57.0",
+    "nodemon": "^3.1.0",
+    "prettier": "^3.2.5",
+    "prisma": "^5.10.2"
+  }
+}
