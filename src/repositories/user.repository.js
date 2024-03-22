@@ -3,7 +3,6 @@ import {
   PrismaClientKnownRequestError,
   PrismaClientUnknownRequestError,
 } from '@prisma/client/runtime/library';
-import logger from '../utils/logger';
 import RepositoryError from '../errors/repository.error';
 import { DB_ERROR_CODES } from '../constants/error.codes';
 
@@ -16,24 +15,21 @@ export default class UserRepository {
     fullName,
     email,
     passwordHash,
-    refreshToken,
-    role,
-    approverStatus,
     bankName,
     ifsc,
     bankAccNum,
     pan,
+    role = 'user',
   ) {
     try {
       const newUser = await this.prismaClient.user.create({
         data: {
           fullName,
           email,
-          isApprover: approverStatus,
           passwordDetail: {
             create: {
               passwordHash,
-              refreshToken,
+              refreshToken: '',
             },
           },
           bankDetail: {
@@ -44,7 +40,7 @@ export default class UserRepository {
               pan,
             },
           },
-          roles: {
+          role: {
             connectOrCreate: {
               where: { role },
               create: { role },
@@ -56,106 +52,105 @@ export default class UserRepository {
       return newUser.fullName;
     } catch (err) {
       if (err instanceof PrismaClientKnownRequestError) {
-        // eslint-disable-next-line default-case
-        switch (err.code) {
-          case 'P2000':
-            logger.error(err.message, { errorMetadata: err.meta.target });
-            throw new RepositoryError(
-              err.message,
-              DB_ERROR_CODES.COLUMN_VALUE_DT_MISMATCH,
-              err.meta,
-              err.stack,
-            );
-          case 'P2001':
-            logger.error(err.message, { errorMetadata: err.meta.target });
-            throw new RepositoryError(
-              err.message,
-              DB_ERROR_CODES.WHERE_CONDITION_DOES_NOT_EXIST,
-              err.meta,
-              err.stack,
-            );
-          case 'P2002':
-            throw new RepositoryError(
-              `User ${err.meta.target} already exists`,
-              DB_ERROR_CODES.UNIQUE_CONSTRAINT_VIOLATION,
-              err.meta,
-            );
-          case 'P2003':
-            logger.error(err.message, { errorMetadata: err.meta.target });
-            throw new RepositoryError(
-              err.message,
-              DB_ERROR_CODES.FOREIGN_KEY_CONSTRAINT_FAILURE,
-              err.meta,
-              err.stack,
-            );
+        if (err.code === 'P2000') {
+          throw new RepositoryError(
+            err.message,
+            DB_ERROR_CODES.COLUMN_VALUE_DATATYPE_MISMATCH,
+            true,
+            err.meta,
+            err.stack,
+          );
+        } else if (err.code === 'P2001') {
+          throw new RepositoryError(
+            err.message,
+            DB_ERROR_CODES.WHERE_CONDITION_DOES_NOT_EXIST,
+            true,
+            err.meta,
+            err.stack,
+          );
+        } else if (err.code === 'P2002') {
+          throw new RepositoryError(
+            `User ${err.meta.target} already exists`,
+            DB_ERROR_CODES.UNIQUE_CONSTRAINT_VIOLATION,
+            false,
+            err.meta,
+          );
+        } else if (err.code === 'P2003') {
+          throw new RepositoryError(
+            err.message,
+            DB_ERROR_CODES.FOREIGN_KEY_CONSTRAINT_FAILURE,
+            true,
+            err.meta,
+            err.stack,
+          );
         }
       } else if (err instanceof PrismaClientUnknownRequestError) {
-        logger.error(err.message, { errorMetadata: err.meta });
         throw new RepositoryError(
           err.message,
           DB_ERROR_CODES.UNKNOWN_ORM_ERROR,
+          true,
           err.meta,
           err.stack,
         );
       }
 
-      logger.error(err.message, { errorMetadata: err });
-      throw new RepositoryError(err.message, DB_ERROR_CODES.UNKNOWN_ERROR, err, err.stack);
+      throw new RepositoryError(err.message, DB_ERROR_CODES.UNKNOWN_DB_ERROR, true, err, err.stack);
     }
   }
 
   async fetchAll() {
     try {
       return await this.prismaClient.user.findMany({
-        include: {
-          roles: {
-            select: {
-              role: true,
-            },
+        where: {
+          role: {
+            role: 'user',
           },
+        },
+        include: {
+          role: false,
+          passwordDetail: false,
+          bankDetail: false,
+          claims: false,
         },
       });
     } catch (err) {
       if (err instanceof PrismaClientKnownRequestError) {
-        // eslint-disable-next-line default-case
-        switch (err.code) {
-          case 'P2015':
-            logger.error(err.message, { errorMetadata: err.meta.target });
-            throw new RepositoryError(
-              err.message,
-              DB_ERROR_CODES.NO_RELATED_RECORDS,
-              err.meta,
-              err.stack,
-            );
-          case 'P2017':
-            logger.error(err.message, { errorMetadata: err.meta.target });
-            throw new RepositoryError(
-              err.message,
-              DB_ERROR_CODES.RELATIONS_NOT_CONNECTED,
-              err.meta,
-              err.stack,
-            );
-          case 'P2018':
-            logger.error(err.message, { errorMetadata: err.meta.target });
-            throw new RepositoryError(
-              err.message,
-              DB_ERROR_CODES.CONNECTED_RECORDS_NOT_FOUND,
-              err.meta,
-              err.stack,
-            );
+        if (err.code === 'P2015') {
+          throw new RepositoryError(
+            err.message,
+            DB_ERROR_CODES.NO_RELATED_RECORDS,
+            true,
+            err.meta,
+            err.stack,
+          );
+        } else if (err.code === 'P2017') {
+          throw new RepositoryError(
+            err.message,
+            DB_ERROR_CODES.RELATIONS_NOT_CONNECTED,
+            true,
+            err.meta,
+            err.stack,
+          );
+        } else if (err.code === 'P2018') {
+          throw new RepositoryError(
+            err.message,
+            DB_ERROR_CODES.CONNECTED_RECORDS_NOT_FOUND,
+            true,
+            err.meta,
+            err.stack,
+          );
         }
       } else if (err instanceof PrismaClientUnknownRequestError) {
-        logger.error(err.message, { errorMetadata: err.meta });
         throw new RepositoryError(
           err.message,
           DB_ERROR_CODES.UNKNOWN_ORM_ERROR,
+          true,
           err.meta,
           err.stack,
         );
       }
 
-      logger.error(err.message, { errorMetadata: err });
-      throw new RepositoryError(err.message, DB_ERROR_CODES.UNKNOWN_ERROR, err, err.stack);
+      throw new RepositoryError(err.message, DB_ERROR_CODES.UNKNOWN_DB_ERROR, true, err, err.stack);
     }
   }
 
@@ -166,36 +161,37 @@ export default class UserRepository {
           id: userId,
         },
         include: {
-          roles: {
+          role: {
             select: {
               role: true,
             },
           },
+          passwordDetail: false,
+          bankDetail: false,
+          claims: false,
         },
       });
     } catch (err) {
       if (err instanceof PrismaClientKnownRequestError) {
-        // eslint-disable-next-line default-case
-        switch (err.code) {
-          case 'P2025':
-            throw new RepositoryError(
-              `User with ${err.meta.target}=${userId} does not exist`,
-              DB_ERROR_CODES.RECORD_DOES_NOT_EXIST,
-              err.meta,
-            );
+        if (err.code === 'P2025') {
+          throw new RepositoryError(
+            err.message,
+            DB_ERROR_CODES.RECORD_DOES_NOT_EXIST,
+            false,
+            err.meta,
+          );
         }
       } else if (err instanceof PrismaClientUnknownRequestError) {
-        logger.error(err.message, { errorMetadata: err.meta });
         throw new RepositoryError(
           err.message,
           DB_ERROR_CODES.UNKNOWN_ORM_ERROR,
+          true,
           err.meta,
           err.stack,
         );
       }
 
-      logger.error(err.message, { errorMetadata: err });
-      throw new RepositoryError(err.message, DB_ERROR_CODES.UNKNOWN_ERROR, err, err.stack);
+      throw new RepositoryError(err.message, DB_ERROR_CODES.UNKNOWN_DB_ERROR, true, err, err.stack);
     }
   }
 
@@ -203,30 +199,32 @@ export default class UserRepository {
     try {
       return await this.prismaClient.user.findUniqueOrThrow({
         where: { email },
+        include: {
+          role: false,
+          passwordDetail: false,
+        },
       });
     } catch (err) {
       if (err instanceof PrismaClientKnownRequestError) {
-        // eslint-disable-next-line default-case
-        switch (err.code) {
-          case 'P2025':
-            throw new RepositoryError(
-              `User with ${err.meta.target}=${email} does not exist`,
-              DB_ERROR_CODES.RECORD_DOES_NOT_EXIST,
-              err.meta,
-            );
+        if (err.code === 'P2025') {
+          throw new RepositoryError(
+            err.message,
+            DB_ERROR_CODES.RECORD_DOES_NOT_EXIST,
+            false,
+            err.meta,
+          );
         }
       } else if (err instanceof PrismaClientUnknownRequestError) {
-        logger.error(err.message, { errorMetadata: err.meta });
         throw new RepositoryError(
           err.message,
           DB_ERROR_CODES.UNKNOWN_ORM_ERROR,
+          true,
           err.meta,
           err.stack,
         );
       }
 
-      logger.error(err.message, { errorMetadata: err });
-      throw new RepositoryError(err.message, DB_ERROR_CODES.UNKNOWN_ERROR, err, err.stack);
+      throw new RepositoryError(err.message, DB_ERROR_CODES.UNKNOWN_DB_ERROR, true, err, err.stack);
     }
   }
 
@@ -240,41 +238,45 @@ export default class UserRepository {
               role: true,
             },
           },
+          passwordDetail: false,
+          bankDetail: false,
+          isAdmin: false,
+          isApprover: false,
+          fullName: false,
+          email: false,
         },
       });
 
       return user.roles;
     } catch (err) {
       if (err instanceof PrismaClientKnownRequestError) {
-        // eslint-disable-next-line default-case
-        switch (err.code) {
-          case 'P2025':
-            throw new RepositoryError(
-              `User with ${err.meta.target}=${userId} does not exist`,
-              DB_ERROR_CODES.RECORD_DOES_NOT_EXIST,
-              err.meta,
-            );
-          case 'P2001':
-            logger.error(err.message, { errorMetadata: err.meta.target });
-            throw new RepositoryError(
-              err.message,
-              DB_ERROR_CODES.WHERE_CONDITION_DOES_NOT_EXIST,
-              err.meta,
-              err.stack,
-            );
+        if (err.code === 'P2025') {
+          throw new RepositoryError(
+            `User with ${err.meta.target}=${userId} does not exist`,
+            DB_ERROR_CODES.RECORD_DOES_NOT_EXIST,
+            false,
+            err.meta,
+          );
+        } else if (err.code === 'P2001') {
+          throw new RepositoryError(
+            err.message,
+            DB_ERROR_CODES.WHERE_CONDITION_DOES_NOT_EXIST,
+            true,
+            err.meta,
+            err.stack,
+          );
         }
       } else if (err instanceof PrismaClientUnknownRequestError) {
-        logger.error(err.message, { errorMetadata: err.meta });
         throw new RepositoryError(
           err.message,
           DB_ERROR_CODES.UNKNOWN_ORM_ERROR,
+          true,
           err.meta,
           err.stack,
         );
       }
 
-      logger.error(err.message, { errorMetadata: err });
-      throw new RepositoryError(err.message, DB_ERROR_CODES.UNKNOWN_ERROR, err, err.stack);
+      throw new RepositoryError(err.message, DB_ERROR_CODES.UNKNOWN_DB_ERROR, true, err, err.stack);
     }
   }
 }

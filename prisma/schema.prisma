@@ -8,37 +8,38 @@ datasource db {
 }
 
 model User {
-  id Int @id @default(autoincrement()) @map("id")
+  id String @id @default(cuid()) @map("id")
   createdAt DateTime @default(now()) @map("created_at")
   modifiedAt DateTime @updatedAt @map("modified_at")
 
   fullName String @db.VarChar(255) @map("fullname")
   email String @unique @db.VarChar(255) @map("email")
-  isApprover Boolean @db.Boolean @map("is_approver")
 
   passwordDetail PasswordDetail?
   bankDetail BankDetail?
   claims Claim[]
-  roles Role[]
+  role Role?
 
   @@index([email])
   @@map("users")
 }
 
 model Role {
-  id Int @id @default(autoincrement()) @map("id")
+  id String @id @default(cuid()) @map("id")
   createdAt DateTime @default(now()) @map("created_at")
   modifiedAt DateTime @updatedAt @map("modified_at")
 
   role String @unique @db.VarChar() @map("role")
 
-  users User[]
+  users User @relation(fields: [userId], references: [id])
+  userId String @unique @map("user_id")
 
+  @@index([role])
   @@map("roles")
 }
 
 model PasswordDetail {
-  id Int @id @default(autoincrement()) @map("id")
+  id String @id @default(cuid()) @map("id")
   createdAt DateTime @default(now()) @map("created_at")
   modifiedAt DateTime @updatedAt @map("modified_at")
 
@@ -46,13 +47,13 @@ model PasswordDetail {
   refreshToken String @unique @db.VarChar() @map("refresh_token")
 
   user User @relation(fields: [userId], references: [id])
-  userId Int @unique @map("user_id")
+  userId String @unique @map("user_id")
 
   @@map("password_details")
 }
 
 model BankDetail {
-  id Int @id @default(autoincrement()) @map("id")
+  id String @id @default(cuid()) @map("id")
   createdAt DateTime @default(now()) @map("created_at")
   modifiedAt DateTime @updatedAt @map("modified_at")
 
@@ -62,14 +63,14 @@ model BankDetail {
   pan String @db.VarChar() @unique @map("pan")
 
   user User @relation(fields: [userId], references: [id])
-  userId Int @unique @map("user_id")
+  userId String @unique @map("user_id")
 
   @@index([ifsc, bankAccNum, pan])
   @@map("bank_details")
 }
 
 model Claim {
-  id Int @id @default(autoincrement()) @map("id")
+  id String @id @default(cuid()) @map("id")
   createdAt DateTime @default(now()) @map("created_at")
   modifiedAt DateTime @updatedAt @map("modified_at")
 
@@ -78,6 +79,7 @@ model Claim {
   requestedAmt Decimal @db.Decimal(7, 2) @default(0.00) @map("requested_amt")
   approvedAmt Decimal? @db.Decimal(7, 2) @default(0.00) @map("approved_amt")
   isApproved Boolean? @db.Boolean @map("is_approved") @default(false)
+  isDeclined Boolean? @db.Boolean @map("is_declined") @default(false)
   approvedBy String? @db.VarChar() @map("approved_by")
   declinedBy String? @db.VarChar() @map("declined_by")
   notes String? @db.Text @map("notes")
@@ -87,47 +89,50 @@ model Claim {
   claimType ClaimType?
 
   user User @relation(fields: [userId], references: [id])
-  userId Int @unique @map("user_id")
+  userId String @unique @map("user_id")
 
-  @@index([approvedBy, declinedBy, isApproved])
+  @@index([approvedBy, declinedBy, isApproved, isDeclined])
   @@map("claims")
 }
 
 model Receipt {
-  id Int @id @default(autoincrement()) @map("id")
+  id String @id @default(cuid()) @map("id")
   createdAt DateTime @default(now()) @map("created_at")
   modifiedAt DateTime @updatedAt @map("modified_at")
 
   receipt String? @unique @db.VarChar() @default("Not Attached") @map("receipt")
 
   claim Claim @relation(fields: [claimId], references: [id])
-  claimId Int @unique
+  claimId String @unique
 
+  @@index([receipt])
   @@map("receipts")
 }
 
 model Currency {
-  id Int @id @default(autoincrement()) @map("id")
+  id String @id @default(cuid()) @map("id")
   createdAt DateTime @default(now()) @map("created_at")
   modifiedAt DateTime @updatedAt @map("modified_at")
 
   currency String? @unique @db.VarChar() @map("currency") @default("INR")
 
   claim Claim @relation(fields: [claimId], references: [id])
-  claimId Int @unique
+  claimId String @unique
 
+  @@index([currency])
   @@map("currencies")
 }
 
 model ClaimType {
-  id Int @id @default(autoincrement()) @map("id")
+  id String @id @default(cuid()) @map("id")
   createdAt DateTime @default(now()) @map("created_at")
   modifiedAt DateTime @updatedAt @map("modified_at")
 
-  type String? @unique @db.VarChar() @map("type") @default("Misc")
+  type String? @unique @db.VarChar() @map("type") @default("Others")
 
   claim Claim @relation(fields: [claimId], references: [id])
-  claimId Int @unique
+  claimId String @unique
 
+  @@index([type])
   @@map("claim_types")
 }

@@ -17,7 +17,7 @@ export default class AuthController {
     try {
       const newUser = await this.authService.registerUser(req.body);
 
-      res.status(201).json(new RegisterUserResponse(201, newUser));
+      res.status(201).json(new RegisterUserResponse(newUser, 201));
     } catch (err) {
       if (err instanceof AssetExistsError) {
         next(httpError.BadRequest(err.message));
@@ -38,7 +38,7 @@ export default class AuthController {
     try {
       const accessToken = await this.authService.loginUser(req.body);
 
-      res.status(200).json(new LoginUserResponse(200, accessToken));
+      res.status(200).json(new LoginUserResponse(accessToken, 200));
     } catch (err) {
       if (err instanceof AssetDoesNotExistError) {
         next(httpError.NotFound(err.message));

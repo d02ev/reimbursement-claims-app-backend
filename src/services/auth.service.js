@@ -1,5 +1,4 @@
 import UserRepository from '../repositories/user.repository';
-import logger from '../utils/logger';
 import { ROLES } from '../constants/app.constants';
 import ServiceError from '../errors/service.error';
 import { DB_ERROR_CODES, SERVICE_ERROR_CODES } from '../constants/error.codes';
@@ -29,29 +28,24 @@ export default class AuthService {
 
       // setting the role of the new user created
       let role = ROLES.USER;
-      if (email === 'app.superadmin@example.com') {
+      if (email === 'app.admin@example.com') {
         role = ROLES.SUPER_ADMIN;
-      } else if (email === 'app.admin@example.com') {
-        role = ROLES.ADMIN;
+      } else if (email === 'app.approver@example.com') {
+        role = ROLES.APPROVER;
       }
 
       // setting the password hash of the new user
       const passwordHash = await hashPassword(password);
 
-      // creating a refresh token
-      const refreshToken = generateRefreshToken(email);
-
       return await this.userRepository.create(
         fullName,
         email,
         passwordHash,
-        refreshToken,
-        role,
-        false,
         bankName,
         ifsc,
         bankAccNum,
         pan,
+        role,
       );
     } catch (err) {
       if (err instanceof RepositoryError) {
@@ -59,15 +53,25 @@ export default class AuthService {
           throw new AssetExistsError(
             err.message,
             SERVICE_ERROR_CODES.ASSET_EXISTS,
-            err.meta.target,
+            false,
+            err.meta,
           );
         }
 
-        logger.error(err.message, { errorMetadata: err.meta.target });
-        throw new ServiceError(err.message, SERVICE_ERROR_CODES.INTERNAL_DB_ERROR, err.meta.target);
+        throw new ServiceError(
+          err.message,
+          SERVICE_ERROR_CODES.INTERNAL_DB_ERROR,
+          true,
+          err.meta,
+        );
       } else {
-        logger.error(err.message, { errorMetadata: err });
-        throw new ServiceError(err.message, SERVICE_ERROR_CODES.UNKNOWN_ERROR, err);
+        throw new ServiceError(
+          err.message,
+          SERVICE_ERROR_CODES.UNKNOWN_ERROR,
+          false,
+          err,
+          err.stack,
+        );
       }
     }
   };
@@ -82,11 +86,12 @@ export default class AuthService {
 
       // match the password
       if (!(await comparePassword(userLoginData.password, userPasswordHash.passwordHash))) {
-        throw new PasswordNoMatchError(
-          'Invalid credentials',
-          SERVICE_ERROR_CODES.PASSWORD_NO_MATCH,
-        );
+        throw new PasswordNoMatchError('Invalid credentials');
       }
+
+      // generate and store a refresh token for the user
+      const refreshToken = generateRefreshToken(userLoginData.email);
+      await this.passwordDetailRepository.updateRefreshToken(user.id, refreshToken);
 
       // generate an access token for the user
       const payload = {
@@ -98,44 +103,48 @@ export default class AuthService {
     } catch (err) {
       if (err instanceof RepositoryError) {
         if (err.errorCode === DB_ERROR_CODES.UNIQUE_CONSTRAINT_VIOLATION) {
-          logger.error(err.message, { errorMetadata: err.meta.target });
           throw new AssetExistsError(
             err.message,
             SERVICE_ERROR_CODES.ASSET_EXISTS,
-            err.meta.target,
+            true,
+            err.meta,
             err.stack,
           );
         } else if (err.errorCode === DB_ERROR_CODES.INVALID_VALUE) {
-          logger.error(err.message, { errorMetadata: err.meta.target });
           throw new ServiceError(
             err.message,
             SERVICE_ERROR_CODES.INVALID_DB_RECORD_VALUE,
-            err.meta.target,
+            true,
+            err.meta,
             err.stack,
           );
         } else if (err.errorCode === DB_ERROR_CODES.RECORD_DOES_NOT_EXIST) {
           throw new AssetDoesNotExist(
-            err.message,
+            'User does not exist',
             SERVICE_ERROR_CODES.ASSEST_DOES_NOT_EXIST,
-            err.meta.target,
           );
         }
 
-        logger.error(err.message, { errorMetadata: err.meta.target });
         throw new ServiceError(
           err.message,
           SERVICE_ERROR_CODES.INTERNAL_DB_ERROR,
-          err.meta.target,
+          true,
+          err.meta,
           err.stack,
         );
       } else if (err instanceof PasswordNoMatchError) {
         throw new PasswordNoMatchError(
-          'Invalid credentials',
+          err.message,
           SERVICE_ERROR_CODES.PASSWORD_NO_MATCH,
         );
       } else {
-        logger.error(err.message, { errorMetadata: err });
-        throw new ServiceError(err.message, SERVICE_ERROR_CODES.UNKNOWN_ERROR, err, err.stack);
+        throw new ServiceError(
+          err.message,
+          SERVICE_ERROR_CODES.UNKNOWN_ERROR,
+          true,
+          err,
+          err.stack,
+        );
       }
     }
   };

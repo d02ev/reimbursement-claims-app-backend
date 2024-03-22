@@ -28,7 +28,6 @@ export const AWS_ACCESS_KEY = ENV_AWS_S3_SECRET_ACCESS_KEY;
 export const HASH_SALT_ROUNDS = parseInt(ENV_HASH_SALT_ROUNDS, 10) || FALLBACK_HASH_SALT_ROUNDS;
 
 export const ROLES = {
-  ADMIN: 'admin',
   SUPER_ADMIN: 'super_admin',
   APPROVER: 'approver',
   USER: 'user',
@@ -43,4 +42,5 @@ export const ERROR_NAMES = {
   FILE_UPLOAD_ERROR: 'FileUploadError',
   MIMETYPE_MISMATCH_ERROR: 'MimeTypeMismatchError',
   PASS_NO_MATCH_ERROR: 'PasswordDoNotMatchError',
+  APP_ERROR: 'AppError',
 };
