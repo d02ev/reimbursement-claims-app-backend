@@ -1,0 +1,5 @@
+client/
+node_modules/
+prisma/
+public/
+dist/

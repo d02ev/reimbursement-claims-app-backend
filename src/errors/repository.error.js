@@ -1,14 +1,12 @@
+import { ERROR_NAMES } from '../constants/app.constants';
+
 export default class RepositoryError extends Error {
-	constructor(
-		message,
-		errorCode,
-		meta = null,
-		stack = null
-	) {
-		super(message)
-		this.messag = message
-		this.errorCode = errorCode
-		this.meta = meta
-		this.stack = (stack) ? stack : Error.captureStackTrace(this, this.constructor)
-	}
+  constructor(message, errorCode, meta = null, stack = null) {
+    super(message);
+    this.message = message;
+    this.errorCode = errorCode;
+    this.meta = meta;
+    this.name = ERROR_NAMES.FILE_UPLOAD_ERROR;
+    this.stack = stack || Error.captureStackTrace(this, this.constructor);
+  }
 }

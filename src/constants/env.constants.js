@@ -1,0 +1,11 @@
+export const ENV_PORT = process.env.PORT;
+export const ENV_DATABASE_URL = process.env.DATABASE_URL;
+export const ENV_ACCESS_TOKEN_SECRET_KEY = process.env.ACCESS_TOKEN_SECRET_KEY;
+export const ENV_REFRESH_TOKEN_SECRET_KEY = process.env.REFRESH_TOKEN_SECRET_KEY;
+export const ENV_ACCESS_TOKEN_EXPIRY = process.env.ACCESS_TOKEN_EXPIRY;
+export const ENV_REFRESH_TOKEN_EXPIRY = process.env.REFRESH_TOKEN_EXPIRY;
+export const ENV_AWS_S3_BUCKET_NAME = process.env.AWS_S3_BUCKET_NAME;
+export const ENV_AWS_S3_BUCKET_REGION = process.env.AWS_S3_BUCKET_REGION;
+export const ENV_AWS_S3_ACCESS_KEY_ID = process.env.AWS_S3_ACCESS_KEY_ID;
+export const ENV_AWS_S3_SECRET_ACCESS_KEY = process.env.AWS_S3_SECRET_ACCESS_KEY;
+export const ENV_HASH_SALT_ROUNDS = process.env.HASH_SALT_ROUNDS;

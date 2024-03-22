@@ -1,33 +1,25 @@
-import bcryptjs from 'bcryptjs'
-import jwt from 'jsonwebtoken'
-import { SALT_ROUND } from '../constants.js'
+import bcryptjs from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 
-export const generateAccessToken = (payload) => {
-	return jwt.sign(
-		payload,
-		process.env.ACCESS_TOKEN_SECRET_KEY,
-		{ expiresIn: process.env.ACCESS_TOKEN_EXPIRY }
-	)
-}
+import {
+  ACCESS_TOKEN_SECRET,
+  REFRESH_TOKEN_SECRET,
+  ACCESS_TOKEN_EXP,
+  REFRESH_TOKEN_EXP,
+  HASH_SALT_ROUNDS,
+} from '../constants/app.constants';
 
-export const generateRefreshToken = (email) => {
-	return jwt.sign(
-		{ email },
-		process.env.REFRESH_TOKEN_SECRET_KEY,
-		{ expiresIn: process.env.REFRESH_TOKEN_EXPIRY }
-	)
-}
+export const generateAccessToken = (payload) => jwt.sign(payload, ACCESS_TOKEN_SECRET, {
+  expiresIn: ACCESS_TOKEN_EXP,
+});
 
-export const hashPassword = async (password) => {
-	return await bcryptjs.hash(
-		password,
-		SALT_ROUND
-	)
-}
+export const generateRefreshToken = (email) => jwt.sign({ email }, REFRESH_TOKEN_SECRET, {
+  expiresIn: REFRESH_TOKEN_EXP,
+});
 
-export const comparePassword = async (password, passwordHash) => {
-	return await bcryptjs.compare(
-		password,
-		passwordHash
-	)
-}
+export const hashPassword = async (password) => bcryptjs.hash(password, HASH_SALT_ROUNDS);
+
+export const comparePassword = async (password, passwordHash) => bcryptjs.compare(
+  password,
+  passwordHash,
+);

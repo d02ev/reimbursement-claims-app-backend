@@ -1,11 +1,7 @@
 export default class ClaimCreationResponse {
-	constructor(
-		statusCode = 201,
-		message = 'Claim created successfully',
-		data
-	) {
-		this.statusCode = statusCode
-		this.message = message
-		this.data = data
-	}
+  constructor(data, statusCode = 201, message = 'Claim created successfully') {
+    this.statusCode = statusCode;
+    this.message = message;
+    this.data = data;
+  }
 }

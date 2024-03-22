@@ -3,10 +3,10 @@
   "version": "1.0.0",
   "description": "A simple and minimal reimbursement claiming app",
   "main": "index.js",
-  "type": "module",
   "scripts": {
-    "start": "dotenv -e .env.development -- node src/index.js",
-    "start:dev": "dotenv -e .env.local -- nodemon src/index.js",
+    "start": "dotenv -e .env.development -- node dist/index.js",
+    "build": "babel src -d dist",
+    "start:dev": "dotenv -e .env.local -- nodemon --exec babel-node src/index.js",
     "migrate:local": "dotenv -e .env.local -- npx prisma migrate dev",
     "migrate:development": "dotenv -e .env.development -- npx prisma migrate deploy",
     "studio": "dotenv -e .env.local -- npx prisma studio",
@@ -50,7 +50,13 @@
     "winston": "^3.12.0"
   },
   "devDependencies": {
+    "@babel/cli": "^7.23.9",
+    "@babel/core": "^7.24.0",
+    "@babel/node": "^7.23.9",
+    "@babel/preset-env": "^7.24.0",
     "eslint": "^8.57.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-plugin-import": "^2.29.1",
     "nodemon": "^3.1.0",
     "prettier": "^3.2.5",
     "prisma": "^5.10.2"

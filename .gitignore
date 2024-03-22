@@ -533,3 +533,6 @@ MigrationBackup/
 
 # FE build files
 /public
+
+# Babel build files
+/build
