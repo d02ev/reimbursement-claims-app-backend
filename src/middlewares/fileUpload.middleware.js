@@ -41,7 +41,7 @@ const fileUpload = (req, res, next) => {
         );
       }
     }
-    next();
+    return next();
   });
 };
 

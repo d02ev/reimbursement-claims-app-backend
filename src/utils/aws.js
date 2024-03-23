@@ -38,22 +38,15 @@ export default class AWSClient {
       await this.awsClient.send(putCommand);
     } catch (err) {
       if (err instanceof S3ServiceException) {
-        logger.error(err.message, {
-          errorMetadata: {
-            fault: err.$fault,
-            response: err.$response,
-            stack: err.stack,
-          },
-        });
         throw new AWSError(
           err.message,
           AWS_CLIENT_ERROR_CODES.S3_CLIENT_PUT_ERR,
+          true,
           { response: err.$response, fault: err.$fault },
           err.stack,
         );
       } else {
-        logger.error(err.message, { errorMetadata: err });
-        throw new AWSError(err.message, AWS_CLIENT_ERROR_CODES.UNKNOWN_ERROR, err, err.stack);
+        throw new AWSError(err.message, AWS_CLIENT_ERROR_CODES.UNKNOWN_ERROR, true, err, err.stack);
       }
     }
   }
@@ -70,22 +63,16 @@ export default class AWSClient {
       });
     } catch (err) {
       if (err instanceof S3ServiceException) {
-        logger.error(err.message, {
-          errorMetadata: {
-            fault: err.$fault,
-            response: err.$response,
-            stack: err.stack,
-          },
-        });
         throw new AWSError(
           err.message,
           AWS_CLIENT_ERROR_CODES.S3_CLIENT_GET_ERR,
+          true,
           { response: err.$response, fault: err.$fault },
           err.stack,
         );
       } else {
         logger.error(err.message, { errorMetadata: err });
-        throw new AWSError(err.message, AWS_CLIENT_ERROR_CODES.UNKNOWN_ERROR, err, err.stack);
+        throw new AWSError(err.message, AWS_CLIENT_ERROR_CODES.UNKNOWN_ERROR, true, err, err.stack);
       }
     }
   }
@@ -100,22 +87,15 @@ export default class AWSClient {
       return await this.awsClient.send(deleteCommand);
     } catch (err) {
       if (err instanceof S3ServiceException) {
-        logger.error(err.message, {
-          errorMetadata: {
-            fault: err.$fault,
-            response: err.$response,
-            stack: err.stack,
-          },
-        });
         throw new AWSError(
           err.message,
           AWS_CLIENT_ERROR_CODES.S3_CLIENT_DEL_ERR,
+          true,
           { response: err.$response, fault: err.$fault },
           err.stack,
         );
       } else {
-        logger.error(err.message, { errorMetadata: err });
-        throw new AWSError(err.message, AWS_CLIENT_ERROR_CODES.UNKNOWN_ERROR, err, err.stack);
+        throw new AWSError(err.message, AWS_CLIENT_ERROR_CODES.UNKNOWN_ERROR, true, err, err.stack);
       }
     }
   }

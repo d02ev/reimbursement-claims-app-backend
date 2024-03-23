@@ -3,6 +3,7 @@ import {
   PrismaClientKnownRequestError,
   PrismaClientUnknownRequestError,
 } from '@prisma/client/runtime/library';
+import crypto from 'crypto';
 import RepositoryError from '../errors/repository.error';
 import { DB_ERROR_CODES } from '../constants/error.codes';
 
@@ -29,7 +30,7 @@ export default class UserRepository {
           passwordDetail: {
             create: {
               passwordHash,
-              refreshToken: '',
+              refreshToken: crypto.randomBytes(10).toString(),
             },
           },
           bankDetail: {
@@ -233,26 +234,22 @@ export default class UserRepository {
       const user = await this.prismaClient.user.findUniqueOrThrow({
         where: { id: userId },
         include: {
-          roles: {
+          role: {
             select: {
               role: true,
             },
           },
           passwordDetail: false,
           bankDetail: false,
-          isAdmin: false,
-          isApprover: false,
-          fullName: false,
-          email: false,
         },
       });
 
-      return user.roles;
+      return user.role;
     } catch (err) {
       if (err instanceof PrismaClientKnownRequestError) {
         if (err.code === 'P2025') {
           throw new RepositoryError(
-            `User with ${err.meta.target}=${userId} does not exist`,
+            err.message,
             DB_ERROR_CODES.RECORD_DOES_NOT_EXIST,
             false,
             err.meta,
